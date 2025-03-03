@@ -1,0 +1,57 @@
+1.zad
+print("Unesite satnicu")
+x=float(input())
+print("Unesite koliko sati ste radili")
+y=int(input())
+
+def total_euro():
+    c=x*y
+    print(float(c))
+total_euro()
+2.zad
+try:
+    print("Unesite ocjenu od 0.0 do 1.0")
+    x=float(input())
+    if x<0.6 and x>=0:
+        print("F")
+    if x>=0.6 and x<0.7:
+        print("D")
+    if x>=0.7 and x<0.8:
+        print("C")
+    if x>=0.8 and x<0.9:
+        print("B")
+    if x>=0.9 and x<=1.0:
+        print("A")
+    if x<0:
+        raise Exception
+    if x>1:
+        raise Exception
+except:
+    print("Unjeli ste krivi broj")
+3.zad
+c=0
+sr=0
+min=0
+max=0
+polje=[]
+while True:
+    x=str(input())
+    if x=="Done":
+        break
+    c+=1
+    polje.append(x)
+    min=polje[0]
+    max=polje[0]
+    if min>x:
+        min=x
+    if max<x:
+        max=x 
+polje.sort()
+print("Korisnik je unio",c,"brojeva")
+print("Polje je" ,polje)
+print("najveca vrijednost je",max)
+print("najmanja je",min)
+for i in range(len(polje)):
+    sr+=int(polje[i])
+d=sr/c
+print("Srednja vrijednost je ",d)
