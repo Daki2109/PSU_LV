@@ -1,1 +1,96 @@
+1. jesam
+
+
+2.zad
+import numpy as np
+import matplotlib.pyplot as plt
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
+from tensorflow.keras.models import load_model
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import datetime
+
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
+
+x_train = x_train.reshape(-1, 28, 28, 1).astype('float32') / 255
+x_test = x_test.reshape(-1, 28, 28, 1).astype('float32') / 255
+
+y_train_cat = to_categorical(y_train)
+y_test_cat = to_categorical(y_test)
+
+model = Sequential([
+    Conv2D(32, (3,3), activation='relu', input_shape=(28,28,1)),
+    Conv2D(32, (3,3), activation='relu'),
+    MaxPooling2D((2,2)),
+    Conv2D(64, (3,3), activation='relu'),
+    Conv2D(64, (3,3), activation='relu'),
+    MaxPooling2D((2,2)),
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dropout(0.5),
+    Dense(10, activation='softmax')
+])
+
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+checkpoint = ModelCheckpoint('best_model.h5', monitor='val_accuracy', save_best_only=True, mode='max')
+log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+tensorboard_cb = TensorBoard(log_dir=log_dir, histogram_freq=1)
+
+history = model.fit(
+    x_train, y_train_cat,
+    validation_split=0.2,
+    epochs=15,
+    batch_size=128,
+    callbacks=[checkpoint, tensorboard_cb],
+    verbose=2
+)
+
+best_model = load_model('best_model.h5')
+
+test_loss, test_acc = best_model.evaluate(x_test, y_test_cat, verbose=0)
+print(f'Točnost na testnom skupu: {test_acc:.4f}')
+
+y_pred = best_model.predict(x_test)
+y_pred_classes = np.argmax(y_pred, axis=1)
+
+cm = confusion_matrix(y_test, y_pred_classes)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+disp.plot(cmap=plt.cm.Blues)
+plt.title('Matrica zabune na testnom skupu')
+plt.show()
+
+3.zad
+
+import numpy as np
+import matplotlib.pyplot as plt
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
+from sklearn.preprocessing import MinMaxScaler
+
+model = load_model('best_model.h5')
+
+def preprocess_image(image_path):
+    img = load_img(image_path, color_mode='grayscale', target_size=(28,28))
+    img_array = img_to_array(img).astype('float32') / 255.0
+    img_array = img_array.reshape(1, 28, 28, 1)
+    return img_array
+
+image_path = 'traffic_sign.png'  # zamijenite stvarnim putem do slike prometnog znaka
+img_processed = preprocess_image(image_path)
+
+prediction = model.predict(img_processed)
+predicted_class = np.argmax(prediction, axis=1)[0]
+
+print(f'Predviđena klasa mreže za sliku: {predicted_class}')
+
+plt.imshow(img_processed.reshape(28,28), cmap='gray')
+plt.title(f'Predviđena klasa: {predicted_class}')
+plt.axis('off')
+plt.show()
+
+
 
