@@ -1,1 +1,74 @@
+1.zad
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Flatten
+from tensorflow.keras.utils import to_categorical
 
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
+
+plt.figure(figsize=(10, 4))
+for i in range(10):
+    plt.subplot(2, 5, i+1)
+    plt.imshow(x_train[i], cmap='gray')
+    plt.title(f"Label: {y_train[i]}")
+    plt.axis('off')
+plt.show()
+
+x_train = x_train / 255.0
+x_test = x_test / 255.0
+
+y_train_cat = to_categorical(y_train, 10)
+y_test_cat = to_categorical(y_test, 10)
+
+model = Sequential([
+    Flatten(input_shape=(28, 28)),
+    Dense(128, activation='relu'),
+    Dense(64, activation='relu'),
+    Dense(10, activation='softmax')
+])
+
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+model.fit(x_train, y_train_cat, epochs=10, batch_size=128, verbose=2)
+
+train_loss, train_acc = model.evaluate(x_train, y_train_cat, verbose=0)
+test_loss, test_acc = model.evaluate(x_test, y_test_cat, verbose=0)
+print(f"Točnost na skupu za učenje: {train_acc:.4f}")
+print(f"Točnost na skupu za testiranje: {test_acc:.4f}")
+
+def plot_confusion(y_true, y_pred, title):
+    cm = confusion_matrix(y_true, y_pred)
+    plt.figure(figsize=(8,6))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+    plt.title(title)
+    plt.xlabel('Predviđene klase')
+    plt.ylabel('Stvarne klase')
+    plt.show()
+
+y_train_pred = np.argmax(model.predict(x_train), axis=1)
+y_test_pred = np.argmax(model.predict(x_test), axis=1)
+
+plot_confusion(y_train, y_train_pred, "Matrica zabune na skupu za učenje")
+plot_confusion(y_test, y_test_pred, "Matrica zabune na skupu za testiranje")
+
+2.zad
+
+import random
+
+wrong_indices = np.where(y_test != y_test_pred)[0]
+
+num_to_show = 8
+selected_indices = random.sample(list(wrong_indices), num_to_show)
+
+plt.figure(figsize=(15, 5))
+for i, idx in enumerate(selected_indices):
+    plt.subplot(2, 4, i + 1)
+    plt.imshow(x_test[idx], cmap='gray')
+    plt.title(f"Stvarna: {y_test[idx]}, Predviđena: {y_test_pred[idx]}")
+    plt.axis('off')
+plt.suptitle('Primjeri pogrešno klasificiranih slika iz testnog skupa')
+plt.show()
