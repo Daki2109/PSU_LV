@@ -1,1 +1,198 @@
+1.zad
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+
+def generate_data(n_samples, mode):
+    np.random.seed(42)
+    if mode == 1:
+       
+        t1 = np.random.randn(n_samples//3, 2) + [5, 5]
+        t2 = np.random.randn(n_samples//3, 2) + [0, 0]
+        t3 = np.random.randn(n_samples//3, 2) + [5, 0]
+        data = np.vstack([t1, t2, t3])
+    elif mode == 2:
+  
+        t1 = np.dot(np.random.randn(n_samples//2, 2), [[3, 1],[1, 1]]) + [10, 5]
+        t2 = np.dot(np.random.randn(n_samples//2, 2), [[1, 0],[0, 4]]) + [0, 10]
+        data = np.vstack([t1, t2])
+    elif mode == 3:
+     
+        t1 = np.random.randn(n_samples//4, 2) + [5, 5]
+        t2 = np.random.randn(n_samples//4, 2) + [-5, 5]
+        t3 = np.random.randn(n_samples//4, 2) + [-5, -5]
+        t4 = np.random.randn(n_samples//4, 2) + [5, -5]
+        data = np.vstack([t1, t2, t3, t4])
+    elif mode == 4:
+        t1 = np.random.randn(n_samples//2, 2) + [2, 2]
+        t2 = np.random.randn(n_samples//2, 2) + [7, 7]
+        data = np.vstack([t1, t2])
+    elif mode == 5:
+        data = np.random.randn(n_samples, 2) + [0, 0]
+    else:
+        data = np.random.randn(n_samples, 2)
+    return data
+
+n_samples = 500
+mode = 3
+
+data = generate_data(n_samples, mode)
+
+k = 4  
+kmeans = KMeans(n_clusters=k, random_state=42)
+labels = kmeans.fit_predict(data)
+centers = kmeans.cluster_centers_
+
+plt.figure(figsize=(8,6))
+plt.scatter(data[:,0], data[:,1], c=labels, cmap='tab10', s=30)
+plt.scatter(centers[:,0], centers[:,1], c='red', marker='X', s=200, label='Centri klastera')
+plt.title(f'K-means klasterizacija, način generiranja: {mode}')
+plt.legend()
+plt.show()
+
+2.zad
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+
+def generate_data(n_samples, mode):
+    np.random.seed(42)
+    if mode == 1:
+        t1 = np.random.randn(n_samples//3, 2) + [5, 5]
+        t2 = np.random.randn(n_samples//3, 2) + [0, 0]
+        t3 = np.random.randn(n_samples//3, 2) + [5, 0]
+        data = np.vstack([t1, t2, t3])
+    else:
+        data = np.random.randn(n_samples, 2)
+    return data
+
+n_samples = 500
+mode = 1
+data = generate_data(n_samples, mode)
+
+inertia_values = []
+clusters_range = range(1, 21)
+
+for k in clusters_range:
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(data)
+    inertia_values.append(kmeans.inertia_)
+
+plt.figure(figsize=(8,5))
+plt.plot(clusters_range, inertia_values, marker='o')
+plt.xlabel('Broj klastera (k)')
+plt.ylabel('Vrijednost kriterijske funkcije (Inertia)')
+plt.title('Elbow metoda za određivanje optimalnog broja klastera')
+plt.xticks(clusters_range)
+plt.grid(True)
+plt.show()
+
+3.zad
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.cluster.hierarchy import dendrogram, linkage
+
+def generate_data(n_samples, mode):
+    np.random.seed(42)
+    if mode == 1:
+        t1 = np.random.randn(n_samples//3, 2) + [5, 5]
+        t2 = np.random.randn(n_samples//3, 2) + [0, 0]
+        t3 = np.random.randn(n_samples//3, 2) + [5, 0]
+        data = np.vstack([t1, t2, t3])
+    else:
+        data = np.random.randn(n_samples, 2)
+    return data
+
+n_samples = 500
+mode = 1
+data = generate_data(n_samples, mode)
+
+methods = ['single', 'complete', 'average', 'ward']
+
+plt.figure(figsize=(15, 10))
+for i, method in enumerate(methods, 1):
+    plt.subplot(2, 2, i)
+    Z = linkage(data, method=method)
+    dendrogram(Z, truncate_mode='level', p=5)
+    plt.title(f'Dendrogram - metoda: {method}')
+    plt.xlabel('Indeksi uzoraka')
+    plt.ylabel('Udaljenost')
+plt.tight_layout()
+plt.show()
+
+4.zad
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+from sklearn.cluster import KMeans
+
+image = mpimg.imread('example_grayscale.png')
+
+if image.ndim == 3:
+    image_gray = image[..., 0]  # ako je RGB, uzmi prvi kanal (pretpostavka grayscale)
+else:
+    image_gray = image
+
+pixels = image_gray.reshape(-1, 1)
+
+n_clusters = 10
+kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+kmeans.fit(pixels)
+
+compressed_pixels = kmeans.cluster_centers_[kmeans.labels_]
+compressed_image = compressed_pixels.reshape(image_gray.shape)
+
+plt.figure(figsize=(12, 6))
+plt.subplot(1, 2, 1)
+plt.title("Originalna slika")
+plt.imshow(image_gray, cmap='gray')
+plt.axis('off')
+
+plt.subplot(1, 2, 2)
+plt.title(f"Kvantizirana slika ({n_clusters} klastera)")
+plt.imshow(compressed_image, cmap='gray')
+plt.axis('off')
+plt.show()
+
+original_bits = image_gray.size * 8  # 8 bita po pikselu
+bits_per_pixel_quantized = int(np.ceil(np.log2(n_clusters)))
+compressed_bits = image_gray.size * bits_per_pixel_quantized
+compression_ratio = original_bits / compressed_bits
+
+print(f"Omjer kompresije sa {n_clusters} klastera: {compression_ratio:.2f}")
+
+5.zad
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+from sklearn.cluster import KMeans
+
+image = mpimg.imread('example.png')
+
+w, h, d = image.shape
+pixels = image.reshape(-1, d)
+
+n_clusters = 16
+kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+kmeans.fit(pixels)
+
+compressed_pixels = kmeans.cluster_centers_[kmeans.labels_]
+compressed_image = compressed_pixels.reshape(w, h, d)
+
+plt.figure(figsize=(12, 6))
+plt.subplot(1, 2, 1)
+plt.title("Originalna slika")
+plt.imshow(image)
+plt.axis('off')
+
+plt.subplot(1, 2, 2)
+plt.title(f"Kvantizirana slika ({n_clusters} klastera)")
+plt.imshow(compressed_image.astype(np.uint8))
+plt.axis('off')
+
+plt.show()
+
+
+
+
 
