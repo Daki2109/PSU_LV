@@ -1,1 +1,157 @@
+1. zad 
+a) Na dijagramu raspršenja vidi se da su dvije klase donekle odvojene po vrijednostima temperature i CO2, ali postoji i preklapanje, što može otežati preciznu klasifikaciju.
+
+b) Skup podataka sadrži ukupno:
+print(len(df))
+c) Razdioba podatkovnih primjera po klasama:
+print(df[target_name].value_counts())
+2.zad 
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+df = pd.read_csv('occupancy_processed.csv')
+
+X = df[['S3_Temp', 'S5_CO2']].to_numpy()
+y = df['Room_Occupancy_Count'].to_numpy()
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+def evaluate_knn(k):
+    model = KNeighborsClassifier(n_neighbors=k)
+    model.fit(X_train_scaled, y_train)
+    y_pred = model.predict(X_test_scaled)
+    
+    cm = confusion_matrix(y_test, y_pred)
+    acc = accuracy_score(y_test, y_pred)
+    prec = precision_score(y_test, y_pred, average=None)
+    rec = recall_score(y_test, y_pred, average=None)
+    
+    print(f"K = {k}")
+    print("Matrica zabune:\n", cm)
+    print("Točnost:", acc)
+    print("Preciznost po klasama:", prec)
+    print("Odziv po klasama:", rec)
+    print("\n")
+    
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+    plt.title(f'Matrica zabune za K={k}')
+    plt.xlabel('Predviđene klase')
+    plt.ylabel('Stvarne klase')
+    plt.show()
+
+for k in [1, 5, 15]:
+    evaluate_knn(k)
+
+# Bez skaliranja
+def evaluate_knn_no_scaling(k):
+    model = KNeighborsClassifier(n_neighbors=k)
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    
+    acc = accuracy_score(y_test, y_pred)
+    print(f"Bez skaliranja - K={k}, Točnost: {acc}")
+
+for k in [1, 5, 15]:
+    evaluate_knn_no_scaling(k)
+3.zad
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+df = pd.read_csv('occupancy_processed.csv')
+
+X = df[['S3_Temp', 'S5_CO2']].to_numpy()
+y = df['Room_Occupancy_Count'].to_numpy()
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+def evaluate_decision_tree(max_depth=None, scale_data=True):
+    if scale_data:
+        X_tr, X_te = X_train_scaled, X_test_scaled
+    else:
+        X_tr, X_te = X_train, X_test
+        
+    model = DecisionTreeClassifier(max_depth=max_depth, random_state=42)
+    model.fit(X_tr, y_train)
+    y_pred = model.predict(X_te)
+    
+    cm = confusion_matrix(y_test, y_pred)
+    acc = accuracy_score(y_test, y_pred)
+    prec = precision_score(y_test, y_pred, average=None)
+    rec = recall_score(y_test, y_pred, average=None)
+    
+    print(f"max_depth = {max_depth}, skaliranje = {scale_data}")
+    print("Matrica zabune:\n", cm)
+    print("Točnost:", acc)
+    print("Preciznost po klasama:", prec)
+    print("Odziv po klasama:", rec)
+    print("\n")
+    
+    plt.figure(figsize=(12,8))
+    plot_tree(model, feature_names=['S3_Temp', 'S5_CO2'], class_names=['Slobodna', 'Zauzeta'], filled=True)
+    plt.title(f'Stablo odlučivanja max_depth={max_depth}')
+    plt.show()
+
+for depth in [1, 3, None]:
+    evaluate_decision_tree(max_depth=depth, scale_data=True)
+
+for depth in [1, 3, None]:
+    evaluate_decision_tree(max_depth=depth, scale_data=False)
+4.zad
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+df = pd.read_csv('occupancy_processed.csv')
+
+X = df[['S3_Temp', 'S5_CO2']].to_numpy()
+y = df['Room_Occupancy_Count'].to_numpy()
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+model = LogisticRegression(random_state=42)
+model.fit(X_train_scaled, y_train)
+
+y_pred = model.predict(X_test_scaled)
+
+cm = confusion_matrix(y_test, y_pred)
+acc = accuracy_score(y_test, y_pred)
+prec = precision_score(y_test, y_pred, average=None)
+rec = recall_score(y_test, y_pred, average=None)
+
+print("Matrica zabune:\n", cm)
+print("Točnost:", acc)
+print("Preciznost po klasama:", prec)
+print("Odziv po klasama:", rec)
+
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+plt.title('Matrica zabune - Logistička regresija')
+plt.xlabel('Predviđene klase')
+plt.ylabel('Stvarne klase')
+plt.show()
 
