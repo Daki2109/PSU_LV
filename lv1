@@ -55,3 +55,123 @@ for i in range(len(polje)):
     sr+=int(polje[i])
 d=sr/c
 print("Srednja vrijednost je ",d)
+4.zad
+filename = input("Ime datoteke: ")
+
+try:
+
+    file = open(filename, 'r')
+except:
+    print("Nije moguće otvoriti datoteku:", filename)
+    quit()
+
+
+total = 0
+count = 0
+
+
+for line in file:
+    line = line.strip()
+    if line.startswith("X-DSPAM-Confidence:"):
+  
+        try:
+            number = float(line.split(":")[1])
+            total += number
+            count += 1
+        except:
+            continue
+
+
+if count > 0:
+    average = total / count
+    print("Average X-DSPAM-Confidence:", average)
+else:
+    print("Nema pronađenih linija sa 'X-DSPAM-Confidence:' u datoteci.")
+
+5.zad
+filename = "song.txt"
+
+try:
+    with open(filename, 'r', encoding='utf-8') as file:
+        text = file.read()
+except FileNotFoundError:
+    print(f"Datoteka '{filename}' nije pronađena.")
+    quit()
+
+
+import string
+
+text = text.lower()
+for znak in string.punctuation:
+    text = text.replace(znak, '')
+
+words = text.split()
+
+word_count = {}
+
+for word in words:
+    word_count[word] = word_count.get(word, 0) + 1
+
+
+unique_words = [word for word in word_count if word_count[word] == 1]
+
+
+print(f"Broj riječi koje se pojavljuju samo jednom: {len(unique_words)}")
+print("Te riječi su:")
+for word in unique_words:
+    print(word)
+
+6.zad 
+
+filename = "SMSSpamCollection.txt"
+
+try:
+    with open(filename, 'r', encoding='utf-8') as file:
+        lines = file.readlines()
+except FileNotFoundError:
+    print(f"Datoteka '{filename}' nije pronađena.")
+    quit()
+
+
+ham_word_total = 0
+ham_count = 0
+spam_word_total = 0
+spam_count = 0
+spam_exclamation_end_count = 0
+
+
+for line in lines:
+    line = line.strip()
+    if line == "":
+        continue
+
+ 
+    parts = line.split('\t', 1) if '\t' in line else line.split(' ', 1)
+    if len(parts) != 2:
+        continue  # preskoči ako nije dobro formatirano
+
+    label, message = parts
+    word_count = len(message.split())
+
+    if label.lower() == "ham":
+        ham_word_total += word_count
+        ham_count += 1
+    elif label.lower() == "spam":
+        spam_word_total += word_count
+        spam_count += 1
+        if message.strip().endswith('!'):
+            spam_exclamation_end_count += 1
+
+
+average_ham = ham_word_total / ham_count if ham_count else 0
+average_spam = spam_word_total / spam_count if spam_count else 0
+
+
+print(f"a)")
+print(f"Prosječan broj riječi u HAM porukama: {average_ham:.2f}")
+print(f"Prosječan broj riječi u SPAM porukama: {average_spam:.2f}")
+print()
+print(f"b)")
+print(f"Broj SPAM poruka koje završavaju uskličnikom: {spam_exclamation_end_count}")
+
+
