@@ -1,1 +1,363 @@
+1.zad
+import numpy as np
+import matplotlib.pyplot as plt
+import sklearn.linear_model as lm
+from sklearn.metrics import mean_squared_error
+
+def non_func(x):
+    y = 1.6345 - 0.6235*np.cos(0.6067*x) - 1.3501*np.sin(0.6067*x) - 1.1622*np.cos(2*x*0.6067) - 0.9443*np.sin(2*x*0.6067)
+    return y
+
+def add_noise(y):
+    np.random.seed(14)
+    varNoise = np.max(y) - np.min(y)
+    y_noisy = y + 0.1*varNoise*np.random.normal(0,1,len(y))
+    return y_noisy
+
+x = np.linspace(1, 10, 100)
+y_true = non_func(x)
+y_measured = add_noise(y_true)
+
+plt.figure(1)
+plt.plot(x, y_measured, 'ok', label='Mjereno (sa šumom)')
+plt.plot(x, y_true, label='Stvarno (bez šuma)')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.legend(loc=4)
+plt.show()
+
+
+np.random.seed(12)
+indeksi = np.random.permutation(len(x))
+indeksi_train = indeksi[0:int(np.floor(0.7*len(x)))]
+indeksi_test = indeksi[int(np.floor(0.7*len(x)))+1:len(x)]
+
+
+x = x[:, np.newaxis]
+y_measured = y_measured[:, np.newaxis]
+
+xtrain = x[indeksi_train]
+ytrain = y_measured[indeksi_train]
+
+xtest = x[indeksi_test]
+ytest = y_measured[indeksi_test]
+
+
+plt.figure(2)
+plt.plot(xtrain, ytrain, 'ob', label='Trening skup')
+plt.plot(xtest, ytest, 'or', label='Test skup')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.legend(loc=4)
+plt.show()
+
+
+linearModel = lm.LinearRegression()
+linearModel.fit(xtrain, ytrain)
+
+print('Model je oblika: y_hat = Theta0 + Theta1 * x')
+print('y_hat =', linearModel.intercept_, '+', linearModel.coef_, '* x')
+2.zad
+import numpy as np
+import matplotlib.pyplot as plt
+import sklearn.linear_model as lm
+from sklearn.metrics import mean_squared_error
+from sklearn.preprocessing import PolynomialFeatures
+
+def non_func(x):
+    y = 1.6345 - 0.6235*np.cos(0.6067*x) - 1.3501*np.sin(0.6067*x) - 1.1622 * np.cos(2*x*0.6067) - 0.9443*np.sin(2*x*0.6067)
+    return y
+
+def add_noise(y):
+    np.random.seed(14)
+    varNoise = np.max(y) - np.min(y)
+    y_noisy = y + 0.1*varNoise*np.random.normal(0,1,len(y))
+    return y_noisy
+
+x = np.linspace(1,10,50)
+y_true = non_func(x)
+y_measured = add_noise(y_true)
+
+x = x[:, np.newaxis]
+y_measured = y_measured[:, np.newaxis]
+
+poly = PolynomialFeatures(degree=15)
+xnew = poly.fit_transform(x)
+
+np.random.seed(12)
+indeksi = np.random.permutation(len(xnew))
+indeksi_train = indeksi[0:int(np.floor(0.7*len(xnew)))]
+indeksi_test = indeksi[int(np.floor(0.7*len(xnew)))+1:len(xnew)]
+
+xtrain = xnew[indeksi_train,]
+ytrain = y_measured[indeksi_train]
+
+xtest = xnew[indeksi_test,]
+ytest = y_measured[indeksi_test]
+
+linearModel = lm.LinearRegression()
+linearModel.fit(xtrain,ytrain)
+
+ytest_p = linearModel.predict(xtest)
+MSE_test = mean_squared_error(ytest, ytest_p)
+
+plt.figure(1)
+plt.plot(xtest[:,1],ytest_p,'og',label='predicted')
+plt.plot(xtest[:,1],ytest,'or',label='test')
+plt.legend(loc = 4)
+plt.show()
+
+plt.figure(2)
+plt.plot(x,y_true,label='f')
+plt.plot(x, linearModel.predict(xnew),'r-',label='model')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.plot(xtrain[:,1],ytrain,'ok',label='train')
+plt.legend(loc = 4)
+plt.show()
+3. zad 
+import numpy as np
+import matplotlib.pyplot as plt
+import sklearn.linear_model as lm
+from sklearn.metrics import mean_squared_error
+from sklearn.preprocessing import PolynomialFeatures
+
+def non_func(x):
+    y = 1.6345 - 0.6235*np.cos(0.6067*x) - 1.3501*np.sin(0.6067*x) - 1.1622 * np.cos(2*x*0.6067) - 0.9443*np.sin(2*x*0.6067)
+    return y
+
+def add_noise(y):
+    np.random.seed(14)
+    varNoise = np.max(y) - np.min(y)
+    y_noisy = y + 0.1*varNoise*np.random.normal(0,1,len(y))
+    return y_noisy
+
+def train_and_evaluate(x, y_measured, degrees, train_ratio=0.7):
+    np.random.seed(12)
+    indeksi = np.random.permutation(len(x))
+    tren_size = int(np.floor(train_ratio * len(x)))
+    indeksi_train = indeksi[:tren_size]
+    indeksi_test = indeksi[tren_size:]
+
+    MSEtrain = []
+    MSEtest = []
+    models_predictions = []
+
+    for deg in degrees:
+        poly = PolynomialFeatures(degree=deg)
+        x_poly = poly.fit_transform(x)
+
+        xtrain = x_poly[indeksi_train]
+        ytrain = y_measured[indeksi_train]
+
+        xtest = x_poly[indeksi_test]
+        ytest = y_measured[indeksi_test]
+
+        model = lm.LinearRegression()
+        model.fit(xtrain, ytrain)
+
+        ytrain_pred = model.predict(xtrain)
+        ytest_pred = model.predict(xtest)
+
+        MSEtrain.append(mean_squared_error(ytrain, ytrain_pred))
+        MSEtest.append(mean_squared_error(ytest, ytest_pred))
+        models_predictions.append((deg, model.predict(x_poly)))
+
+    return MSEtrain, MSEtest, models_predictions
+
+x = np.linspace(1,10,50)
+y_true = non_func(x)
+y_measured = add_noise(y_true)
+
+x = x[:, np.newaxis]
+y_measured = y_measured[:, np.newaxis]
+
+degrees = [2, 6, 15]
+
+MSEtrain, MSEtest, models_predictions = train_and_evaluate(x, y_measured, degrees, train_ratio=0.7)
+
+print("MSE na trening podacima za stupnjeve", degrees, ":", MSEtrain)
+print("MSE na test podacima za stupnjeve", degrees, ":", MSEtest)
+
+plt.figure(figsize=(10,6))
+plt.plot(x, y_true, 'k-', label='Pozadinska funkcija')
+for deg, y_pred in models_predictions:
+    plt.plot(x, y_pred, label=f'Model stupanj {deg}')
+plt.scatter(x, y_measured, color='gray', alpha=0.5, label='Podaci s šumom')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.legend()
+plt.title('Usporedba modela različitih stupnjeva s pozadinskom funkcijom')
+plt.show()
+
+
+for train_ratio in [0.3, 0.7, 0.9]:
+    MSEtrain, MSEtest, _ = train_and_evaluate(x, y_measured, degrees, train_ratio=train_ratio)
+    print(f"\nTrening set = {int(train_ratio*100)}% podataka")
+    print("MSE trening:", MSEtrain)
+    print("MSE test:", MSEtest)
+4.zad
+import pandas as pd
+import matplotlib.pyplot as plt
+
+df = pd.read_csv('car_processed.csv')
+
+# 1. Koliko automobila je dostupno u datasetu?
+broj_automobila = df.shape[0]
+
+# 2. Tipovi stupaca
+tipovi_stupaca = df.dtypes
+
+# 3. Automobil s najvećom i najmanjom cijenom
+max_cijena = df['selling_price'].max()
+min_cijena = df['selling_price'].min()
+auto_max_cijena = df[df['selling_price'] == max_cijena]['name'].values
+auto_min_cijena = df[df['selling_price'] == min_cijena]['name'].values
+
+# 4. Koliko automobila je proizvedeno 2012. godine?
+broj_2012 = df[df['year'] == 2012].shape[0]
+
+# 5. Automobil s najviše i najmanje prijeđenih kilometara
+max_km = df['km_driven'].max()
+min_km = df['km_driven'].min()
+auto_max_km = df[df['km_driven'] == max_km]['name'].values
+auto_min_km = df[df['km_driven'] == min_km]['name'].values
+
+# 6. Najčešći broj sjedala
+najcesci_broj_sjedala = df['seats'].mode().values[0]
+
+# 7. Prosječna prijeđena kilometraža za dizel i benzin (petrol)
+avg_km_dizel = df[df['fuel'] == 'Diesel']['km_driven'].mean()
+avg_km_petrol = df[df['fuel'] == 'Petrol']['km_driven'].mean()
+
+
+plt.figure(figsize=(15,10))
+
+plt.subplot(2,2,1)
+df['fuel'].value_counts().plot(kind='bar')
+plt.title('Broj automobila po tipu goriva')
+
+plt.subplot(2,2,2)
+df['seller_type'].value_counts().plot(kind='bar')
+plt.title('Broj automobila po tipu prodavača')
+
+plt.subplot(2,2,3)
+df['transmission'].value_counts().plot(kind='bar')
+plt.title('Broj automobila po tipu mjenjača')
+
+plt.subplot(2,2,4)
+df['year'].value_counts().sort_index().plot(kind='bar')
+plt.title('Broj automobila po godini proizvodnje')
+
+plt.tight_layout()
+plt.show()
+
+print(f"Broj automobila: {broj_automobila}")
+print("\nTipovi stupaca:")
+print(tipovi_stupaca)
+print(f"\nAutomobil s najvećom cijenom: {auto_max_cijena}, cijena: {max_cijena}")
+print(f"Automobil s najmanjom cijenom: {auto_min_cijena}, cijena: {min_cijena}")
+print(f"\nBroj automobila proizvedenih 2012.: {broj_2012}")
+print(f"\nAutomobil s najviše prijeđenih km: {auto_max_km}, km: {max_km}")
+print(f"Automobil s najmanje prijeđenih km: {auto_min_km}, km: {min_km}")
+print(f"\nNajčešći broj sjedala: {najcesci_broj_sjedala}")
+print(f"\nProsječna kilometraža automobila s dizel motorom: {avg_km_dizel:.2f}")
+print(f"Prosječna kilometraža automobila s benzinskim motorom: {avg_km_petrol:.2f}")
+5.zad
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error, max_error
+
+df = pd.read_csv('car_processed.csv')
+
+df_clean = df.drop(columns=['name'])
+
+X = df_clean.drop(columns=['selling_price'])
+y = df_clean['selling_price']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+scaler = MinMaxScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+model = LinearRegression()
+model.fit(X_train_scaled, y_train)
+
+y_train_pred = model.predict(X_train_scaled)
+y_test_pred = model.predict(X_test_scaled)
+
+print("Trening set:")
+print("MAE:", mean_absolute_error(y_train, y_train_pred))
+print("MSE:", mean_squared_error(y_train, y_train_pred))
+print("R2:", r2_score(y_train, y_train_pred))
+print("Max Error:", max_error(y_train, y_train_pred))
+
+print("\nTest set:")
+print("MAE:", mean_absolute_error(y_test, y_test_pred))
+print("MSE:", mean_squared_error(y_test, y_test_pred))
+print("R2:", r2_score(y_test, y_test_pred))
+print("Max Error:", max_error(y_test, y_test_pred))
+
+features_sets = [
+    ['year', 'km_driven', 'mileage', 'engine', 'max_power', 'seats'],
+    ['year', 'km_driven', 'mileage', 'engine', 'max_power', 'seats', 'owner', 'fuel', 'seller_type', 'transmission']
+]
+
+for features in features_sets:
+    X_sel = df_clean[features]
+    X_sel = pd.get_dummies(X_sel, drop_first=True)
+    X_train_sel, X_test_sel, y_train_sel, y_test_sel = train_test_split(X_sel, y, test_size=0.2, random_state=42)
+    scaler_sel = MinMaxScaler()
+    X_train_sel_scaled = scaler_sel.fit_transform(X_train_sel)
+    X_test_sel_scaled = scaler_sel.transform(X_test_sel)
+    model_sel = LinearRegression()
+    model_sel.fit(X_train_sel_scaled, y_train_sel)
+    y_test_pred_sel = model_sel.predict(X_test_sel_scaled)
+    mse_test = mean_squared_error(y_test_sel, y_test_pred_sel)
+    print(f"\nTestni MSE s {len(features)} ulaznih veličina: {mse_test:.4f}")
+6.zad 
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error, max_error
+
+df = pd.read_csv('car_processed.csv')
+
+df_clean = df.drop(columns=['name'])
+
+X = df_clean.drop(columns=['selling_price'])
+y = df_clean['selling_price']
+
+X = pd.get_dummies(X, drop_first=True)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+scaler = MinMaxScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+model = LinearRegression()
+model.fit(X_train_scaled, y_train)
+
+y_train_pred = model.predict(X_train_scaled)
+y_test_pred = model.predict(X_test_scaled)
+
+print("Trening set:")
+print("MAE:", mean_absolute_error(y_train, y_train_pred))
+print("MSE:", mean_squared_error(y_train, y_train_pred))
+print("R2:", r2_score(y_train, y_train_pred))
+print("Max Error:", max_error(y_train, y_train_pred))
+
+print("\nTest set:")
+print("MAE:", mean_absolute_error(y_test, y_test_pred))
+print("MSE:", mean_squared_error(y_test, y_test_pred))
+print("R2:", r2_score(y_test, y_test_pred))
+print("Max Error:", max_error(y_test, y_test_pred))
+
+
+
 
